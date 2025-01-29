@@ -1,8 +1,8 @@
 .create-survey {
-  height: calc(90vh - 100px);
+  height: calc(95vh - 100px);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
+  padding: 0 1.5rem;
   max-width: 1800px;
   margin: 0 auto;
   width: 95%;
