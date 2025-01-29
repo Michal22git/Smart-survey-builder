@@ -1,0 +1,60 @@
+.survey-list {
+  padding: 2rem;
+}
+
+.survey-list h1 {
+  margin-bottom: 2rem;
+  color: var(--text-color);
+}
+
+.surveys-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.survey-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.survey-card:hover {
+  transform: translateY(-4px);
+}
+
+.survey-card h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+}
+
+.survey-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn.primary {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.btn.secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+
+.btn:hover {
+  opacity: 0.9;
+} 
