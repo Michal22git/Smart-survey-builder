@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import Optional, Iterator, Union
 
 from .client import get_openai_client, get_default_model
 from .exceptions import GenerationError, SchemaValidationError
@@ -29,17 +29,20 @@ class SurveyGenerator:
         """
         self.client = get_openai_client()
         self.model = model or get_default_model()
-    
-    def generate(self, request: SurveyGenerationRequest) -> SurveyGenerationResponse:
+
+    def generate(self, request: SurveyGenerationRequest, stream: bool = False) -> Union[
+        SurveyGenerationResponse, Iterator[str]]:
         """
         Generate a survey based on the provided request.
-        
+
         Args:
             request: The survey generation request
-            
+            stream: Whether to stream the response
+
         Returns:
-            A response containing the generated survey
-            
+            If stream=False: A response containing the generated survey
+            If stream=True: An iterator yielding response chunks
+
         Raises:
             GenerationError: If there's an error during generation
             SchemaValidationError: If the generated survey doesn't match the expected schema
@@ -57,8 +60,12 @@ class SurveyGenerator:
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"Create a survey about: {request.prompt}"}
-                ]
+                ],
+                stream=stream
             )
+
+            if stream:
+                return response
 
             content = response.choices[0].message.content
             survey_data = json.loads(content)
@@ -69,7 +76,7 @@ class SurveyGenerator:
                 prompt=request.prompt,
                 model=self.model
             )
-            
+
         except json.JSONDecodeError as e:
             raise SchemaValidationError(f"Invalid JSON response from OpenAI: {str(e)}")
         except Exception as e:
@@ -77,24 +84,24 @@ class SurveyGenerator:
                 raise SchemaValidationError(f"Schema validation error: {str(e)}")
             else:
                 raise GenerationError(f"Error generating survey: {str(e)}")
-    
-    def generate_from_free_text(self, free_text: str) -> SurveyGenerationResponse:
+
+    def generate_from_free_text_stream(self, free_text: str) -> Iterator[Union[str, SurveyGenerationResponse]]:
         """
-        Generate a survey based on free-form user description.
-        
+        Generate a survey based on free-form user description with streaming.
+
         Args:
             free_text: Free-form text describing the desired survey
-            
+
         Returns:
-            Generated survey response
-            
+            An iterator yielding response chunks and finally the complete survey
+
         Raises:
             GenerationError: If an error occurs during generation
             SchemaValidationError: If a schema validation error occurs
         """
         try:
             analysis_prompt = get_free_text_analysis_prompt()
-            
+
             analysis_response = self.client.chat.completions.create(
                 model=self.model,
                 response_format={"type": "json_object"},
@@ -114,12 +121,56 @@ class SurveyGenerator:
                 language=params.get("language", "en")
             )
 
-            return self.generate(request)
-            
+            yield {"type": "analysis_complete", "params": request.model_dump()}
+
+            stream = self.generate(request, stream=True)
+            for chunk in stream:
+                yield {"type": "chunk",
+                       "content": chunk.choices[0].delta.content if hasattr(chunk.choices[0], 'delta') and
+                                                                    chunk.choices[0].delta.content else ""}
+
         except json.JSONDecodeError as e:
-            raise SchemaValidationError(f"Parameter analysis error: {str(e)}")
+            yield {"type": "error", "message": f"Parameter analysis error: {str(e)}"}
         except Exception as e:
-            raise GenerationError(f"Error generating survey: {str(e)}")
+            yield {"type": "error", "message": f"Error generating survey: {str(e)}"}
+
+    def process_stream(self, stream_iterator) -> SurveyGenerationResponse:
+        """
+        Process a stream of response chunks into a complete survey.
+
+        Args:
+            stream_iterator: Iterator yielding response chunks from OpenAI
+
+        Returns:
+            A complete survey generation response
+
+        Raises:
+            SchemaValidationError: If the generated survey doesn't match the expected schema
+            GenerationError: If there's an error during generation
+        """
+        try:
+            collected_content = ""
+            for chunk in stream_iterator:
+                if hasattr(chunk.choices[0], 'delta') and chunk.choices[0].delta.content:
+                    collected_content += chunk.choices[0].delta.content
+                    yield chunk.choices[0].delta.content
+
+            survey_data = json.loads(collected_content)
+            survey = SurveySchema.model_validate(survey_data)
+
+            return SurveyGenerationResponse(
+                survey=survey,
+                prompt="",
+                model=self.model
+            )
+
+        except json.JSONDecodeError as e:
+            raise SchemaValidationError(f"Invalid JSON response from OpenAI: {str(e)}")
+        except Exception as e:
+            if "validation error" in str(e).lower():
+                raise SchemaValidationError(f"Schema validation error: {str(e)}")
+            else:
+                raise GenerationError(f"Error generating survey: {str(e)}")
     
     def regenerate_question(self, survey_schema: SurveySchema, question_index: int, feedback: str = "") -> SurveySchema:
         """
