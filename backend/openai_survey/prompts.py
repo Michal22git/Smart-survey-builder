@@ -4,7 +4,6 @@ SURVEY_TEMPLATES = {
     Use a variety of question types (text, single choice, multiple choice, dropdown).
     Each question should be clear and specific.
     """,
-    
     "customer_satisfaction": """
     Create a customer satisfaction survey.
     Include questions about:
@@ -15,7 +14,6 @@ SURVEY_TEMPLATES = {
     - Areas for improvement
     Use a numerical scale (1-5) for rating questions.
     """,
-    
     "market_research": """
     Create a market research survey on the given topic.
     Include questions about:
@@ -25,7 +23,6 @@ SURVEY_TEMPLATES = {
     - Factors influencing purchase decisions
     - Awareness of competing brands
     """,
-    
     "employee_evaluation": """
     Create an employee evaluation survey.
     Include questions about:
@@ -35,27 +32,29 @@ SURVEY_TEMPLATES = {
     - Timeliness
     - Initiative and creativity
     - Areas for development
-    """
+    """,
 }
+
 
 def get_survey_template(template_name: str = "general") -> str:
     """Get a survey template by name."""
     return SURVEY_TEMPLATES.get(template_name, SURVEY_TEMPLATES["general"])
 
+
 def get_survey_system_prompt(template: str, num_questions: int, language: str) -> str:
     """
     Build a complete system prompt based on template and parameters.
-    
+
     Args:
         template: Template name to use
         num_questions: Suggested number of questions
         language: Survey language
-        
+
     Returns:
         Complete system prompt
     """
     template_content = get_survey_template(template)
-    
+
     system_prompt = f"""
     You are an AI specialized in creating surveys.
     
@@ -87,20 +86,21 @@ def get_survey_system_prompt(template: str, num_questions: int, language: str) -
     2. Text questions don't need options
     3. Each question has all required fields
     """
-    
+
     return system_prompt
 
+
 def get_question_regeneration_prompt(
-    survey_title: str, 
-    survey_description: str, 
+    survey_title: str,
+    survey_description: str,
     other_questions: list,
     question_to_regenerate: dict,
     question_index: int,
-    feedback: str
+    feedback: str,
 ) -> str:
     """
     Build a prompt for regenerating a single question in a survey.
-    
+
     Args:
         survey_title: Title of the survey
         survey_description: Description of the survey
@@ -108,7 +108,7 @@ def get_question_regeneration_prompt(
         question_to_regenerate: The question to regenerate
         question_index: Index of the question to regenerate (0-based)
         feedback: User feedback on why to regenerate the question
-        
+
     Returns:
         Complete system prompt for question regeneration
     """
@@ -142,13 +142,14 @@ def get_question_regeneration_prompt(
         ]
     }}
     """
-    
+
     return system_prompt
+
 
 def get_free_text_analysis_prompt() -> str:
     """
     Get the prompt for analyzing free-text survey descriptions.
-    
+
     Returns:
         System prompt for free-text analysis
     """
@@ -173,4 +174,4 @@ def get_free_text_analysis_prompt() -> str:
         "template": "general",
         "language": "en"
     }
-    """ 
+    """
