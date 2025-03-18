@@ -1,4 +1,3 @@
-import logging
 import sys
 import traceback
 
@@ -15,6 +14,7 @@ from .serializers import (
     SurveyDetailSerializer,
     ResponseSerializer
 )
+
 
 class SurveyListAPIView(generics.ListAPIView):
     queryset = Survey.objects.all().order_by('-created_at')
