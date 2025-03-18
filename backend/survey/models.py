@@ -66,9 +66,11 @@ class Response(models.Model):
         Survey, on_delete=models.CASCADE, related_name="responses"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    respondent_name = models.CharField(max_length=100, blank=True, null=True)
+    respondent_email = models.EmailField(blank=True, null=True)
 
     def __str__(self):
-        return f"Odpowiedź na {self.survey.title} ({self.created_at})"
+        return f"Response {self.id} for {self.survey.title}"
 
 
 class Answer(models.Model):
@@ -80,4 +82,4 @@ class Answer(models.Model):
     selected_options = models.ManyToManyField(Option, blank=True)
 
     def __str__(self):
-        return f"Odpowiedź na {self.question.text}"
+        return f"Response for {self.question.text}"
