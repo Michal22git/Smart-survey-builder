@@ -4,7 +4,8 @@ from .views import (
     SurveyListAPIView, 
     SurveyDeleteAPIView,
     SurveyDetailAPIView,
-    SurveyResponseCreateAPIView
+    SurveyResponseCreateAPIView,
+    SurveyReportView
 )
 
 urlpatterns = [
@@ -12,4 +13,5 @@ urlpatterns = [
     path('<str:public_id>/', SurveyDeleteAPIView.as_view(), name='survey-delete'),
     path('<str:public_id>/details/', SurveyDetailAPIView.as_view(), name='survey-detail'),
     path('<str:public_id>/respond/', SurveyResponseCreateAPIView.as_view(), name='survey-respond'),
+    path('<str:public_id>/report/', SurveyReportView.as_view(), name='survey-report'),
 ]
