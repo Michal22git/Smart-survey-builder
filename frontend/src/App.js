@@ -1,8 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Link } from 'react-router-dom';
 import './App.css';
-import SurveyList from './components/SurveyList/SurveyList';
-import CreateSurvey from './components/CreateSurvey/CreateSurvey';
+import AppRoutes from './routes';
 
 function App() {
   return (
@@ -17,10 +16,7 @@ function App() {
         </nav>
         
         <main className="main-content">
-          <Routes>
-            <Route path="/" element={<SurveyList />} />
-            <Route path="/create" element={<CreateSurvey />} />
-          </Routes>
+          <AppRoutes />
         </main>
       </div>
     </Router>

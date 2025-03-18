@@ -1,0 +1,45 @@
+.survey-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.2s ease;
+}
+
+.survey-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #ff5252;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.survey-description {
+  margin-top: 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.survey-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+} 

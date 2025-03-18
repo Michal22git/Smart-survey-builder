@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SurveyCard from '../SurveyCard/SurveyCard';
+import useReportGenerator from '../../hooks/useReportGenerator';
 import './SurveyList.css';
 
 const SurveyList = () => {
@@ -6,32 +9,42 @@ const SurveyList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteMessage, setDeleteMessage] = useState(null);
+  const navigate = useNavigate();
+  
+  const { 
+    isGeneratingReport, 
+    reportError, 
+    generateReport, 
+    clearReportError 
+  } = useReportGenerator();
 
-  const fetchSurveys = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('http://localhost:8000/api/surveys/');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setSurveys(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching surveys:', error);
-      setError('Nie udało się pobrać ankiet. Spróbuj ponownie później.');
-      setLoading(false);
-    }
-  };
-
+  // Fetch surveys
   useEffect(() => {
+    const fetchSurveys = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8000/api/surveys/');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setSurveys(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching surveys:', error);
+        setError('Failed to load surveys. Please try again later.');
+        setLoading(false);
+      }
+    };
+
     fetchSurveys();
   }, []);
 
+  // Delete survey
   const handleDelete = async (publicId, title) => {
-    if (window.confirm(`Czy na pewno chcesz usunąć ankietę "${title}"?`)) {
+    if (window.confirm(`Are you sure you want to delete the survey "${title}"?`)) {
       try {
         const response = await fetch(`http://localhost:8000/api/surveys/${publicId}/`, {
           method: 'DELETE',
@@ -45,7 +58,7 @@ const SurveyList = () => {
         }
         
         setSurveys(surveys.filter(survey => survey.public_id !== publicId));
-        setDeleteMessage(`Ankieta "${title}" została pomyślnie usunięta.`);
+        setDeleteMessage(`Survey "${title}" has been successfully deleted.`);
         
         setTimeout(() => {
           setDeleteMessage(null);
@@ -53,11 +66,23 @@ const SurveyList = () => {
         
       } catch (error) {
         console.error('Error deleting survey:', error);
-        setError(`Nie udało się usunąć ankiety: ${error.message}`);
+        setError(`Failed to delete survey: ${error.message}`);
       }
     }
   };
 
+  // Generate report
+  const handleGenerateReport = (publicId, title) => {
+    generateReport(publicId, title);
+  };
+  
+  // Fill survey - navigate to the survey form
+  const handleFillSurvey = (publicId) => {
+    console.log('Navigating to fill survey:', publicId);
+    navigate(`/surveys/${publicId}/fill`);
+  };
+
+  // Loading view
   if (loading) {
     return (
       <div className="survey-list">
@@ -67,6 +92,7 @@ const SurveyList = () => {
     );
   }
 
+  // Error view
   if (error) {
     return (
       <div className="survey-list">
@@ -76,6 +102,7 @@ const SurveyList = () => {
     );
   }
 
+  // Main survey list view
   return (
     <div className="survey-list">
       <h1>Available Surveys</h1>
@@ -84,29 +111,23 @@ const SurveyList = () => {
         <div className="success-message">{deleteMessage}</div>
       )}
       
+      {reportError && (
+        <div className="error">{reportError}</div>
+      )}
+      
       {surveys.length === 0 ? (
-        <div className="no-surveys">No surveys available at the moment.</div>
+        <div className="no-surveys">No surveys available.</div>
       ) : (
         <div className="surveys-grid">
           {surveys.map((survey) => (
-            <div key={survey.public_id} className="survey-card">
-              <div className="card-header">
-                <h3>{survey.title}</h3>
-                <button 
-                  className="delete-btn"
-                  onClick={() => handleDelete(survey.public_id, survey.title)}
-                  title="Delete survey"
-                >
-                  &times;
-                </button>
-              </div>
-              <p>Created: {new Date(survey.created_at).toLocaleDateString()}</p>
-              {survey.description && <p className="survey-description">{survey.description}</p>}
-              <div className="survey-actions">
-                <button className="btn primary">Fill Survey</button>
-                <button className="btn secondary">Generate Report</button>
-              </div>
-            </div>
+            <SurveyCard
+              key={survey.public_id}
+              survey={survey}
+              onDelete={handleDelete}
+              onGenerateReport={handleGenerateReport}
+              onFillSurvey={handleFillSurvey}
+              isGeneratingReport={isGeneratingReport}
+            />
           ))}
         </div>
       )}
